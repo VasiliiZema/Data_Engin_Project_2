@@ -15,38 +15,57 @@ df["YearStart"] = df["YearStart"].astype(object)
 df["Low_Confidence_Limit"] = df["Low_Confidence_Limit"].replace('.', 'nan').astype(float)
 df["High_Confidence_Limit"] = df["High_Confidence_Limit"].replace('.', 'nan').astype(float)
 
-My_dict = dict()
+num_dict = dict()
+str_dict = dict()
 
 for row in df:
-    test_dict = dict()
+    test_num_dict = dict()
+    test_str_dict = dict()
+
+    # Для полей, представляющих числовые данные, рассчитайте характеристики:
+    # максимальное и минимальное значения, среднее арифметическое, сумму, стандартное отклонение
     if df[row].dtypes in (int, float):
-        test_dict["max_value"] = df[row].max()
-        test_dict["min_value"] = df[row].min()
-        test_dict["avg_value"] = df[row].mean()
-        test_dict["sum_value"] = df[row].sum()
-        test_dict["std_value"] = df[row].std()
-    else:
+        test_num_dict["max_value"] = df[row].max()
+        test_num_dict["min_value"] = df[row].min()
+        test_num_dict["avg_value"] = df[row].mean()
+        test_num_dict["sum_value"] = df[row].sum()
+        test_num_dict["std_value"] = df[row].std()
+
+        num_dict[row] = test_num_dict
+    else: #Для полей, представляющий текстовые данные рассчитайте частоту встречаемости.
         for elem in df[row]:
-            if ("value_count " + str(elem)) in test_dict:
-                test_dict["value_count " + str(elem)] += 1
+            if ("value_count " + str(elem)) in test_str_dict:
+                test_str_dict["value_count " + str(elem)] += 1
             else:
-                test_dict["value_count " + str(elem)] = 0
+                test_str_dict["value_count " + str(elem)] = 0
 
-    My_dict[row] = test_dict
+            str_dict[row] = test_str_dict
 
-with open('result_5.json', 'w') as file_json:
-    file_json.write(json.dumps(My_dict))
+# Сораняем расчеты для числовых полей в json файл
+with open('num_result_5.json', 'w') as file_json:
+    file_json.write(json.dumps(num_dict))
 
-with open('result_5.msgpack', "wb") as file_msgpack:
-    file_msgpack.write(msgpack.dumps(My_dict))
+# Сораняем частоту встречаемости для меток строковых полей в json файл
+with open('str_result_5.json', 'w') as file_json:
+    file_json.write(json.dumps(str_dict))
 
-with open("result_5.pkl", "wb") as file_pkl:
-    file_pkl.write(pickle.dumps(My_dict))
 
-result_df = pd.DataFrame().from_dict(My_dict)
-result_df.to_csv("result_5.csv")
+# Сораняем наш набор данных в  файл в msgpack файл
+with open('Alzheimer_s_Disease_and_Healthy_Aging_Data.msgpack', "wb") as file_msgpack:
+    file_msgpack.write(msgpack.dumps(df.to_dict()))
 
-ends = ('5.csv', '5.json', '5.msgpack', '5.pkl')
+# Сораняем наш набор данных в  файл в pkl файл
+# df.to_pickle("Alzheimer_s_Disease_and_Healthy_Aging_Data.pkl")
+with open("Alzheimer_s_Disease_and_Healthy_Aging_Data.pkl", "wb") as file_pkl:
+    file_pkl.write(pickle.dumps(df.to_dict()))
+
+# Сораняем наш набор данных в  файл в json файл
+# df.to_json("Alzheimer_s_Disease_and_Healthy_Aging_Data.json")
+with open('Alzheimer_s_Disease_and_Healthy_Aging_Data.json', 'w') as file_json:
+    file_json.write(json.dumps(df.to_dict()))
+
+#Рассчитываем размер каждого файла
+ends = ('_Data.csv', '_Data.json', '_Data.msgpack', '_Data.pkl')
 for file in os.scandir():
     if file.name.endswith(ends):
         print(file.name, os.path.getsize(file))
